@@ -125,8 +125,10 @@ tig_substring (void)
 
   char *s = read_string (addr + start);
   size_t len = strlen (s);
-  if (length > len || length < 0)
-    errl (current_loc, 1, "substring: argument out of bounds");
+  if (length > len || length < 0) {
+    fprintf(stderr, "substring: arguments out of bounds\n");
+    exit(1);
+  }
   char new[length + 1];
   strncpy (new, s, length);
   new[length] = 0;
@@ -143,6 +145,28 @@ tig_getchar (void)
     return get_empty ();
   else
     return get_ascii (c);
+}
+
+/* read_int() : reads and returns a signed interger from stdin.
+   Undefined behaviour on EOF. */
+static int32_t
+tig_read_int (void)
+{
+    int32_t val = 0;
+    char prev = ' ';
+    char b = getchar();
+
+    while (b < '0' || b > '9') {
+        prev = b; b = getchar();
+    }
+    while (b >= '0' && b <= '9') {
+        val = 10 * val + (b - '0');
+        b = getchar();
+    }
+    if (prev == '-')
+        val = -val;
+	
+    return val;
 }
 
 
@@ -184,7 +208,8 @@ tig_chr (void)
 {
   int32_t c = get_temp (argid[0]);
   if (c < 0 || c > 255) {
-    errl (current_loc, 1, "chr: character out of range");
+    fprintf(stderr, "chr: character out of range\n");
+    exit(1);
   }
   return get_ascii ((char)c);
 }
@@ -254,6 +279,7 @@ init_primitives (void)
   register_primitive ("printint", tig_print_int);
   register_primitive ("print", tig_print);
   register_primitive ("print_err", tig_print_err);
+  register_primitive ("read_int", tig_read_int);
   register_primitive ("size", tig_size);
   register_primitive ("streq", tig_streq);
   register_primitive ("strcmp", tig_strcmp);
